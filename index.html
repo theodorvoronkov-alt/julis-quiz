@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JuLis Wissensquiz – Wie gut kennst du deinen Verband?</title>
+<style>
+  :root {
+    --fdp-yellow: #FFED00;
+    --julis-magenta: #E5007D;
+    --correct-green: #28a745;
+    --wrong-red: #dc3545;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--fdp-yellow); color:#111; padding:1rem; min-height:100vh; display:flex; align-items:center;}
+  
+  #quiz-wrap{max-width:600px; margin:0 auto; padding:2.5rem; background:#fff; border-radius:20px; box-shadow: 0 15px 35px rgba(0,0,0,0.15); width:100%; position:relative; overflow:hidden;}
+  
+  /* JuLis Style Stripe */
+  #quiz-wrap::before { content:""; position:absolute; top:0; left:0; width:100%; height:8px; background: var(--julis-magenta); }
+
+  .header-tag{font-size:12px; color: var(--julis-magenta); font-weight:900; text-transform:uppercase; margin-bottom:8px; letter-spacing:1.5px}
+  .header-title{font-size:26px; font-weight:900; margin-bottom:1.5rem; color:#111; line-height:1.2}
+  
+  #progress-bar-wrap{height:8px; background:#f0f0f0; border-radius:4px; margin-bottom:2rem; overflow:hidden}
+  #progress-bar{height:100%; background: var(--julis-magenta); width:0%; transition:width 0.4s ease}
+  
+  .q-num{font-size:14px; color:#aaa; margin-bottom:10px; font-weight:600}
+  .q-text{font-size:18px; font-weight:700; color:#111; margin-bottom:22px; line-height:1.4}
+  
+  .opt-list{display:flex; flex-direction:column; gap:12px}
+  .opt{display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border:2px solid #edf0f2; border-radius:12px; cursor:pointer; font-size:15px; font-weight:600; transition:all 0.2s ease; background:#fdfdfd}
+  .opt:hover{border-color: var(--julis-magenta); background:#fff9fc}
+  
+  /* Feedback Styles */
+  .opt.correct { background: #d4edda !important; border-color: var(--correct-green) !important; color: #155724 !important; }
+  .opt.wrong { background: #f8d7da !important; border-color: var(--wrong-red) !important; color: #721c24 !important; }
+  .opt.disabled { pointer-events: none; }
+  .icon { font-size: 20px; font-weight: bold; }
+
+  #btn-wrap{margin-top:2.5rem; display:flex; justify-content:center}
+  #nav-btn{padding:14px 40px; border:none; border-radius:50px; background: var(--julis-magenta); color:#fff; font-size:16px; font-weight:bold; cursor:pointer; display:none; transition: transform 0.2s; box-shadow: 0 4px 15px rgba(229,0,125,0.3)}
+  #nav-btn:hover{transform: scale(1.05); background: #c2006a;}
+
+  #result-block{display:none; text-align:center}
+  .score-display{font-size:60px; font-weight:900; color: var(--julis-magenta); margin:1.5rem 0}
+  #retry-btn{padding:12px 25px; background:none; border:2px solid var(--julis-magenta); color:var(--julis-magenta); border-radius:50px; cursor:pointer; font-weight:bold; margin-top:1.5rem; transition: 0.2s}
+  #retry-btn:hover{background: var(--julis-magenta); color:#fff}
+</style>
+</head>
+<body>
+
+<div id="quiz-wrap">
+  <div class="header-tag">Junge Liberale</div>
+  <div class="header-title">Das JuLi-Wissensquiz</div>
+  
+  <div id="progress-bar-wrap"><div id="progress-bar"></div></div>
+  
+  <div id="quiz-content">
+    <div id="questions-area"></div>
+    <div id="btn-wrap"><button id="nav-btn">Nächste Frage</button></div>
+  </div>
+
+  <div id="result-block">
+    <div class="header-tag">Dein Ergebnis</div>
+    <div class="header-title" id="res-title">Quiz beendet</div>
+    <div class="score-display" id="res-score">0/15</div>
+    <p id="res-text" style="margin-bottom:2rem; line-height:1.6; font-size:16px; color:#444"></p>
+    <button id="retry-btn" onclick="location.reload()">Quiz neustarten</button>
+  </div>
+</div>
+
+<script>
+const questions = [
+  {q: "Wann wurden die Jungen Liberalen (JuLis) als bundesweiter Verband gegründet?", o: ["1972", "1975", "1980", "1982", "1990"], a: 2},
+  {q: "Wo fand der Gründungskongress der JuLis statt?", o: ["Bonn", "Berlin", "Heppenheim", "Gummersbach", "Wiesbaden"], a: 0},
+  {q: "Wie heißt die aktuelle Bundesvorsitzende der JuLis (Stand 2026)?", o: ["Franziska Brandmann", "Finn Flebbe", "Johannes Vogel", "Gyde Jensen", "Jens Teutrine"], a: 1},
+  {q: "Wie hießen die Vorgänger-Organisationen der JuLis, die bis 1982 der FDP nahestanden?", o: ["Junge Demokraten", "Liberale Jugend", "Freiheits-Schüler", "Junge Liberale Aktion", "Demokratische Jugend"], a: 0},
+  {q: "In welcher europäischen Dachorganisation sind die JuLis Mitglied?", o: ["LYMEC", "IFLRY", "ALDE Youth", "JEF", "Liberal International"], a: 0},
+  {q: "Was ist das höchste beschlussfassende Gremium der JuLis?", o: ["Bundesvorstand", "Landesrat", "Bundeskongress (BuKo)", "Mitgliederversammlung", "Hauptausschuss"], a: 2},
+  {q: "Bis zu welchem Alter kann man bei den JuLis Mitglied sein?", o: ["25 Jahre", "30 Jahre", "35 Jahre", "40 Jahre", "Unbegrenzt"], a: 2},
+  {q: "Welcher ehemalige JuLi-Bundesvorsitzende ist heute FDP-Parteivorsitzender?", o: ["Guido Westerwelle", "Philipp Rösler", "Christian Lindner", "Wolfgang Kubicki", "Marco Buschmann"], a: 2},
+  {q: "Wie lautet der Name des Mitgliedermagazins der JuLis?", o: ["LIBERAL", "jung+liberal", "Freiheitsbrief", "Magenta Post", "Der Liberale"], a: 1},
+  {q: "Wie viele Landesverbände haben die JuLis?", o: ["10", "12", "15", "16", "17"], a: 3},
+  {q: "Welche Farbe ist neben dem FDP-Gelb das Markenzeichen der JuLis?", o: ["Blau", "Grün", "Magenta", "Rot", "Türkis"], a: 2},
+  {q: "Welcher ehemalige JuLi-Chef war der erste offen homosexuelle Vizekanzler Deutschlands?", o: ["Guido Westerwelle", "Johannes Vogel", "Konstantin Kuhle", "Michael Georg Link", "Daniel Bahr"], a: 0},
+  {q: "Was fordern die JuLis oft provokant in Bezug auf den öffentlich-rechtlichen Rundfunk?", o: ["Komplette Abschaffung", "Privatisierung & Reform", "Erhöhung der Gebühren", "Verstaatlichung", "Keine Meinung"], a: 1},
+  {q: "Was ist der inhaltliche Kern der JuLis?", o: ["Sozialismus", "Konservatismus", "Programmatischer Optimismus", "Ökologismus", "Zentralismus"], a: 2},
+  {q: "In welcher Stadt haben die JuLis ihre Bundesgeschäftsstelle?", o: ["Leipzig", "Bonn", "Frankfurt", "Berlin", "München"], a: 3}
+];
+
+let currentIdx = 0;
+let score = 0;
+
+const qArea = document.getElementById('questions-area');
+const navBtn = document.getElementById('nav-btn');
+const progBar = document.getElementById('progress-bar');
+
+function render() {
+  const q = questions[currentIdx];
+  navBtn.style.display = 'none';
+  
+  let html = `<div class="q-num">Frage ${currentIdx + 1} von ${questions.length}</div>`;
+  html += `<div class="q-text">${q.q}</div><div class="opt-list">`;
+  q.o.forEach((opt, i) => {
+    html += `<div class="opt" onclick="check(${i}, this)">${opt}<span class="icon"></span></div>`;
+  });
+  html += `</div>`;
+  qArea.innerHTML = html;
+  progBar.style.width = `${(currentIdx / questions.length) * 100}%`;
+}
+
+window.check = (i, el) => {
+  const correct = questions[currentIdx].a;
+  const allOpts = document.querySelectorAll('.opt');
+  
+  allOpts.forEach(opt => opt.classList.add('disabled'));
+
+  if (i === correct) {
+    el.classList.add('correct');
+    el.querySelector('.icon').innerText = '✓';
+    score++;
+  } else {
+    el.classList.add('wrong');
+    el.querySelector('.icon').innerText = '✕';
+    allOpts[correct].classList.add('correct');
+    allOpts[correct].querySelector('.icon').innerText = '✓';
+  }
+
+  navBtn.style.display = 'block';
+  if(currentIdx === questions.length - 1) navBtn.innerText = "Zum Ergebnis";
+};
+
+navBtn.onclick = () => {
+  currentIdx++;
+  if (currentIdx < questions.length) {
+    render();
+  } else {
+    showResult();
+  }
+};
+
+function showResult() {
+  document.getElementById('quiz-content').style.display = 'none';
+  document.getElementById('result-block').style.display = 'block';
+  progBar.style.width = '100%';
+  document.getElementById('res-score').innerText = `${score}/${questions.length}`;
+  
+  let text = "";
+  if(score === 15) text = "Absoluter BuKo-Profi! Du hast den Durchblick und bist vermutlich schon Ehrenmitglied.";
+  else if(score > 10) text = "Stark! Du bist ein echter JuLi und kennst die Geschichte und Struktur deines Verbandes.";
+  else if(score > 5) text = "Ganz ordentlich! Ein paar Fakten fehlen noch, aber der Spirit stimmt.";
+  else text = "Da ist noch Luft nach oben! Zeit, mal wieder in ein Programmbuch zu schauen oder zum nächsten Stammtisch zu gehen.";
+  document.getElementById('res-text').innerText = text;
+}
+
+render();
+</script>
+</body>
+</html>
